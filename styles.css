@@ -130,3 +130,22 @@ body.light .forest-trail{background:linear-gradient(145deg,#d8e8d4,#b9d6bb 55%,#
 @keyframes trailBreathe{50%{filter:drop-shadow(0 0 23px #e3e6a3)}}@keyframes trailRing{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(1.8)}}
 @media(max-width:680px){.forest-trail{height:600px}.trail-stop-0{left:22%;top:78%}.trail-stop-1{left:39%;top:60%}.trail-stop-2{left:25%;top:40%}.trail-stop-3{left:62%;top:26%}.trail-stop-4{left:69%;top:82%}.trail-paw{width:66px;height:66px}.trail-paw-svg{width:60px;height:60px}.trail-discovery{left:56px;min-width:80px;font-size:12px}.trail-discovery strong{font-size:20px}.trail-stop-3 .trail-discovery,.trail-stop-4 .trail-discovery{right:56px}}
 @media(prefers-reduced-motion:reduce){.trail-paw{animation:none}.trail-open .trail-ripple{animation:none}.trail-discovery{transition:none}}
+
+/* v8.3: Paw mode is a freeform SVG woodland scene, never a card grid. */
+.trail-area{display:block!important;grid-template-columns:none!important}
+.paw-scene{height:auto;min-height:0;aspect-ratio:900/470;background:radial-gradient(ellipse at 55% 70%,#4e704a 0%,#1b4238 53%,#0b272b 100%);overflow:hidden}
+.trail-illustration{display:block;width:100%;height:auto;position:relative;z-index:2;overflow:visible}
+.winding-trail{fill:none;stroke:url(#trailSoil);stroke-width:115;stroke-linecap:round}
+.trail-dashes{fill:none;stroke:#e2c78a;stroke-width:2;stroke-dasharray:3 17;opacity:.3}
+.footprint{cursor:pointer;outline:none}
+.footprint .paw-symbol{fill:#e3e4a8;filter:drop-shadow(0 0 9px #dff8a8);transition:transform .3s,fill .3s}
+.footprint:not(.revealed):hover .paw-symbol,.footprint:not(.revealed):focus-visible .paw-symbol{transform:scale(1.18);fill:#fff3bd}
+.footprint.revealed{cursor:default}.footprint.revealed .paw-symbol{fill:#86d9ad;opacity:.7}
+.paw-wave{fill:none;stroke:#ffe9aa;stroke-width:3;opacity:0;pointer-events:none}
+.footprint.revealed .paw-wave{animation:pawSvgWave .75s ease-out}
+.paw-label{opacity:0;pointer-events:none;transition:opacity .35s;paint-order:stroke;stroke:#122b28;stroke-width:4px;stroke-linejoin:round;fill:#fff2c7;font-weight:800}
+.footprint.revealed .paw-label{opacity:1}.paw-name{font-size:20px}.paw-percent{font-size:28px;fill:#ffe19b}
+@keyframes pawSvgWave{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(2)}}
+body.light .paw-scene{background:radial-gradient(ellipse at 55% 70%,#c8ddbb,#a7cdb4 58%,#7caf9b)}
+body.light .paw-label{stroke:#f1f6e8;fill:#234b36}body.light .paw-percent{fill:#73521b}
+@media(max-width:600px){.paw-scene{aspect-ratio:900/570}.trail-illustration{min-height:320px}.paw-name{font-size:23px}.paw-percent{font-size:29px}}
