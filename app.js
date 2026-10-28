@@ -103,7 +103,35 @@ function startCalc(){
  worker.postMessage({type:'exact',...context});
 }
 function exactPercent(r){const a=BigInt(r.numerator),b=BigInt(r.denominator);if(!b)return '—';const rounded=(a*100000n+b/2n)/b;return (Number(rounded)/1000).toLocaleString('ru-RU',{minimumFractionDigits:3,maximumFractionDigits:3})+'%'}
-function exactOdds(r){const a=BigInt(r.numerator),b=BigInt(r.denominator);if(!b)return 'Нет допустимых комбинаций в выбранном режиме.';if(!a)return 'Подходящих комбинаций нет — шанс равен нулю.';const rounded=(b+a/2n)/a;return 'В среднем 1 комбинация из '+rounded.toLocaleString('ru-RU')+' соответствует условиям.'}
+function exactOdds(r){
+ const a=BigInt(r.numerator), b=BigInt(r.denominator);
+ if(!b)return 'Нет допустимых комбинаций в выбранном режиме.';
+ if(!a)return 'Подходящих комбинаций нет — шанс равен нулю.';
+ if(a===b)return 'Все комбинации соответствуют условиям.';
+ const fmt=n=>n.toLocaleString('ru-RU');
+ function gcd(x,y){while(y){const t=x%y;x=y;y=t;}return x;}
+ const divisor=gcd(a,b), exactA=a/divisor,exactB=b/divisor;
+ // Точная короткая дробь отображается без знака приближения.
+ if(exactB<=100n)return 'В среднем '+fmt(exactA)+' '+(exactA===1n?'комбинация':'комбинаций')+' из '+fmt(exactB)+' соответствует условиям.';
+ // Для обычных шансов: отклонение не больше 0,1 процентного пункта.
+ // Для редких (<1%): относительная погрешность не больше 1%.
+ const rare=a*100n<b;
+ const toleranceNumerator=rare?a: b;
+ const toleranceDenominator=rare?100n:1000n;
+ // Выбираем минимальный знаменатель, который удовлетворяет погрешности.
+ for(let q=2n;q<=10000n;q++){
+  const nearest=(a*q+b/2n)/b;
+  if(nearest<1n||nearest>q)continue;
+  const error=(nearest*b>a*q?nearest*b-a*q:a*q-nearest*b);
+  if(error*toleranceDenominator<=toleranceNumerator*q){
+   const d=gcd(nearest,q);
+   return 'В среднем ≈ '+fmt(nearest/d)+' '+(nearest/d===1n?'комбинация':'комбинаций')+' из '+fmt(q/d)+' соответствует условиям.';
+  }
+ }
+ // Для крайне редких событий — понятная запись «1 из N».
+ const n=(b+a/2n)/a;
+ return 'В среднем ≈ 1 комбинация из '+fmt(n)+' соответствует условиям.';
+}
 function renderChanceResult(r){if(!r){$('chanceResult').innerHTML='';return}if(r.exact){$('chanceResult').innerHTML=`<div class="result-box"><span class="eyebrow">ТОЧНЫЙ РАСЧЁТ В МОДЕЛИ СИМУЛЯТОРА</span><h3>${esc(modeLabel(r.mode))}</h3><div class="chance-number">${exactPercent(r)}</div><p class="muted">${exactOdds(r)}</p><p class="muted">Вероятность рассчитана точно, но отображается с округлением до 0,001%. Это вероятность в математической модели симулятора, не подтверждённый шанс в CatWar.</p></div>`;return}$('chanceResult').innerHTML='';}
 function renderHistory(){$('historyList').innerHTML=state.history.length?state.history.map(r=>`<article class="saved-item"><div class="saved-top"><div><h3>📊 ${esc(modeLabel(r.mode))}</h3><small>${new Date(r.date).toLocaleString('ru-RU')} · ${r.exact?'точный подсчёт':r.done.toLocaleString('ru-RU')+' попыток'} ${r.stopped?'· остановлено':''}</small></div><button class="secondary" data-repeat="${r.id}">Повторить условия</button></div><div class="chance-number">${r.exact?exactPercent(r):(r.done?100*r.hits/r.done:0).toLocaleString('ru-RU',{maximumFractionDigits:4})+'%'}</div><span class="muted">${r.exact?exactOdds(r):'Архивный расчёт методом Монте-Карло'}</span></article>`).join(''):'<div class="empty-state">Расчётов пока нет</div>';$('historyList').querySelectorAll('[data-repeat]').forEach(b=>b.onclick=()=>{const r=state.history.find(x=>x.id===Number(b.dataset.repeat));state.chanceMode=r.mode;state.mins=[...r.mins];state.maxs=[...r.maxs];state.iterations=r.iterations;persist();$('chanceMode').value=r.mode;desc('chanceDescription',r.mode);renderRanges();switchTab('chance');toast('Условия восстановлены')})}
 function downloadData(){const blob=new Blob([JSON.stringify({app:'catwar-simulator',version:1,data:state},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='catwar-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
