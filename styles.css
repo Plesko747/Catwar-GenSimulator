@@ -33,3 +33,19 @@
 @keyframes chestPulse{50%{opacity:.4;transform:scale(1.07)}}
 #settings input[type=range]{display:block;width:min(540px,100%);accent-color:var(--gold);margin:10px 0 23px}
 @media(prefers-reduced-motion:reduce){.cards-from-chest .flip-card,.chest-glow{animation:none}}
+
+/* v6: chest is one 3D object, not a flip-card; cards burst out after its lid opens */
+.treasure-chest{perspective:750px;overflow:visible}
+.chest-lid{transform-origin:50% 95%;transform-style:preserve-3d}
+.treasure-chest.opening .chest-lid{animation:chestLift 1.05s cubic-bezier(.15,.75,.2,1) forwards}
+.treasure-chest.opening .chest-glow{animation:burstGlow 1.1s ease-out forwards}
+.chest-sparks{position:absolute;top:45px;left:0;width:100%;color:#ffe7a0;font-size:32px;letter-spacing:15px;opacity:0;pointer-events:none}
+.treasure-chest.opening .chest-sparks{animation:sparkRise 1s ease-out forwards}
+.treasure-chest.opening .chest-body{box-shadow:inset 0 0 0 5px #d4a350,0 0 45px #ffc65caa,0 15px 20px #0005}
+@keyframes chestLift{0%{transform:rotateX(0) translateY(0)}55%{transform:rotateX(-68deg) translateY(-35px)}100%{transform:rotateX(-76deg) translateY(-50px)}}
+@keyframes burstGlow{0%{opacity:.2;transform:scale(.8)}60%{opacity:1;transform:scale(1.35)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes sparkRise{0%{opacity:0;transform:translateY(65px) scale(.6)}45%{opacity:1}100%{opacity:0;transform:translateY(-105px) scale(1.3)}}
+.cards-from-chest .flip-card{animation:chestCardFlight .9s cubic-bezier(.17,.8,.25,1.1) both;animation-delay:calc(var(--card-index) * .16s)}
+@keyframes chestCardFlight{0%{opacity:0;transform:translate(0,140px) scale(.12) rotate(-35deg)}45%{opacity:1;transform:translate(0,-48px) scale(.65) rotate(15deg)}100%{opacity:1;transform:translate(0,0) scale(1) rotate(0)}}
+body.no-motion .treasure-chest.opening .chest-lid{animation:none;transform:rotateX(-70deg)}
+@media(prefers-reduced-motion:reduce){.treasure-chest.opening .chest-lid,.treasure-chest.opening .chest-sparks,.cards-from-chest .flip-card{animation:none}}
