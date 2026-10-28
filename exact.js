@@ -1,0 +1,7 @@
+// Exact counting under the simulator's uniform weak-composition model.
+// All calculations use integer tenths and BigInt to avoid rounding errors.
+function polyCount(indices,lo,hi){let dp=Array(1001).fill(0n);dp[0]=1n;for(const i of indices){const next=Array(1001).fill(0n);let window=0n;for(let s=0;s<=1000;s++){if(s>=lo[i])window+=dp[s-lo[i]];if(s>hi[i])window-=dp[s-hi[i]-1];next[s]=window}dp=next}return dp}
+function countValid(mode,mins,maxs){const lo=mins.slice(),hi=maxs.slice();if(mode==='balanced'){for(let i=0;i<5;i++){lo[i]=Math.max(lo[i],150);hi[i]=Math.min(hi[i],400)}}if(mode==='attack25')lo[0]=Math.max(lo[0],250);if(mode==='attack40')lo[0]=Math.max(lo[0],400);if(lo.some((x,i)=>x>hi[i]))return 0n;
+let group=[],threshold=0;if(mode.startsWith('speed')){group=[3,4];threshold=mode==='speed70'?700:400}else if(mode.startsWith('defense')){group=[1,2];threshold=mode==='defense70'?700:400}
+if(!group.length)return polyCount([0,1,2,3,4],lo,hi)[1000];const rest=[0,1,2,3,4].filter(i=>!group.includes(i));const a=polyCount(group,lo,hi),b=polyCount(rest,lo,hi);let result=0n;for(let s=threshold;s<=1000;s++)result+=a[s]*b[1000-s];return result}
+function exactChance(mode,mins,maxs){const zeros=[0,0,0,0,0],full=[1000,1000,1000,1000,1000];const numerator=countValid(mode,mins,maxs),denominator=countValid(mode,zeros,full);return {numerator:numerator.toString(),denominator:denominator.toString()}}
