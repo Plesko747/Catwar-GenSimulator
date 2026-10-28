@@ -13,27 +13,23 @@ function theme(){document.body.classList.toggle('light',state.theme==='light');d
 function rows(v){return STATS.map((s,i)=>`<div class="stat-row"><span>${s.emoji} ${s.full}</span><b>${format(v[i])}</b></div>`).join('')}
 function modeLabel(m){return MODES[m]?.name||'Неизвестный режим'}
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rand(i+1);[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
-// Real CC0 recordings hosted by OpenGameArt; no synthesized audio.
-// Users may place identically named files into assets/audio/ to serve audio locally.
-const AUDIO_ROOT='https://opengameart.org/sites/default/files/';
-const MUSIC_TRACKS={forest:'wandering_woodlands.mp3',stars:'fairy_lights.mp3'};
-const SOUND_TRACKS={sparkle:'open%20chest.wav',wood:'paper_sound_-_1.mp3',chime:'open%20chest.wav',soft:'paper_sound_-_3.mp3'};
-const MUSIC_SOURCES={forest:AUDIO_ROOT+MUSIC_TRACKS.forest,stars:AUDIO_ROOT+MUSIC_TRACKS.stars};
-const SOUND_SOURCES=Object.fromEntries(Object.entries(SOUND_TRACKS).map(([k,v])=>[k,AUDIO_ROOT+v]));
+// Bundled local audio: no external hosts or network requests.
+const MUSIC_SOURCES={forest:'assets/audio/forest.ogg',stars:'assets/audio/stream.ogg'};
+const SOUND_SOURCES={sparkle:'assets/audio/sparkle.ogg',wood:'assets/audio/wood.ogg',chime:'assets/audio/chime.ogg',soft:'assets/audio/soft.ogg',chest:'assets/audio/chest.ogg'};
 let musicPlayer=null,sfxPlayer=null;
 function stopMusic(){if(musicPlayer){musicPlayer.pause();musicPlayer.currentTime=0}}
 function startMusic(){if(!state.music)return;const src=MUSIC_SOURCES[state.musicStyle]||MUSIC_SOURCES.forest;
- if(!musicPlayer){musicPlayer=new Audio();musicPlayer.loop=true;musicPlayer.preload='none';musicPlayer.addEventListener('error',()=>toast('Не удалось загрузить музыку. Проверь подключение к интернету.'))}
+ if(!musicPlayer){musicPlayer=new Audio();musicPlayer.loop=true;musicPlayer.preload='none';musicPlayer.addEventListener('error',()=>toast('Не удалось воспроизвести природные звуки. Проверь файлы assets/audio.'))}
  if(musicPlayer.src!==src)musicPlayer.src=src;
  musicPlayer.volume=Math.min(1,Math.max(0,(state.musicVolume??40)/100));
  musicPlayer.play().catch(()=>toast('Нажми на переключатель музыки для воспроизведения'));
 }
 function playSound(force=false,kind='reveal'){
  if(!force&&!state.sound)return;
- const src=kind==='chest'?SOUND_SOURCES.chime:(SOUND_SOURCES[state.soundStyle]||SOUND_SOURCES.sparkle);
+ const src=kind==='chest'?SOUND_SOURCES.chest:(SOUND_SOURCES[state.soundStyle]||SOUND_SOURCES.sparkle);
  if(sfxPlayer){sfxPlayer.pause();sfxPlayer=null}
  sfxPlayer=new Audio(src);sfxPlayer.volume=Math.min(1,Math.max(0,(state.soundVolume??75)/100));
- sfxPlayer.play().catch(()=>{if(force)toast('Не удалось загрузить звук. Проверь интернет.')});
+ sfxPlayer.play().catch(()=>{if(force)toast('Звуковой файл отсутствует. Проверь assets/audio.')});
 }
 function startGen(){if(state.current&&state.current.opened.length<5){toast('Сначала открой все пять предметов текущей комбинации');return}const values=generate(state.mode);state.current={values,mode:state.mode,order:shuffle([0,1,2,3,4]),opened:[],chestOpened:false,id:Date.now()};persist();renderCards();updateTimers()}
 function openCard(slot){const c=state.current;if(!c||c.opened.includes(slot))return;c.opened.push(slot);playSound();persist();renderCards();updateTimers();if(c.opened.length===5)toast('Все параметры раскрыты!')}

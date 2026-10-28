@@ -49,3 +49,37 @@
 @keyframes chestCardFlight{0%{opacity:0;transform:translate(0,140px) scale(.12) rotate(-35deg)}45%{opacity:1;transform:translate(0,-48px) scale(.65) rotate(15deg)}100%{opacity:1;transform:translate(0,0) scale(1) rotate(0)}}
 body.no-motion .treasure-chest.opening .chest-lid{animation:none;transform:rotateX(-70deg)}
 @media(prefers-reduced-motion:reduce){.treasure-chest.opening .chest-lid,.treasure-chest.opening .chest-sparks,.cards-from-chest .flip-card{animation:none}}
+
+/* v7 light theme polish: legible controls, surfaces, cards and chest stage */
+body.light{--bg:#f5f7f2;--surface:#ffffff;--surface2:#edf4ef;--text:#20332e;--muted:#526b62;--line:#c8d8cf;--gold:#92601e;--accent:#237454;--danger:#ad3535;--shadow:0 12px 32px #193d2c17;background:linear-gradient(180deg,#f0f6f0 0,#fafbf8 520px,#f5f7f2 100%)}
+body.light .panel{background:#fff;border-color:#d1dfd5;box-shadow:0 12px 34px #234d3712}
+body.light .tab{background:#fff;color:#425e52;border-color:#cfddd2}
+body.light .tab:hover:not(.active){background:#e6f2e9;border-color:#8eb8a0}
+body.light .tab.active{background:#246f50;color:#fff;border-color:#246f50;box-shadow:0 4px 14px #246f5033}
+body.light .badge{background:#f4f8f4;color:#466357}
+body.light .info{background:#f0f6ee;color:#405b4d;border-left-color:#b78a42}
+body.light select,body.light input[type=number],body.light input[type=text]{background:#f9fcf9;color:#233b31;border-color:#b8cfc0}
+body.light select:focus,body.light input:focus{border-color:#287c57}
+body.light .secondary{background:#e8f2eb;color:#214d38;border:1px solid #b7d4c0}
+body.light .secondary:hover{background:#d9eadf}
+body.light .primary{background:linear-gradient(120deg,#9c6b29,#d7a950);color:#fff;box-shadow:0 5px 15px #a77c3a25}
+body.light .primary:hover{filter:brightness(1.06)}
+body.light .danger{background:#ad3e3e;color:white}
+body.light .empty-state{background:#f9fcf9;border-color:#bfd2c4;color:#5a7164}
+body.light .flip-front{background:radial-gradient(circle at 50% 35%,#416d63,#1e423d 82%);border-color:#bc9450;color:#ffebbf}
+body.light .flip-front:before{border-color:#e3c58a88}
+body.light .flip-back{background:linear-gradient(145deg,#fffdf6,#edf6ef);border-color:#b48a48;color:#213b30;box-shadow:0 7px 24px #244b341a}
+body.light .flip-back .value{color:#93601c}
+body.light .result-box{background:#f7faf6;border-color:#b9d1bd}
+body.light .saved-item,body.light .range-row{background:#f7faf7;border-color:#d1dfd4}
+body.light .progress-track{background:#dbe9df}
+body.light .progress-track>div{background:#287f58}
+body.light .chance-number{color:#216e4c}
+body.light #toast{background:#fff;color:#263c32;border-color:#b8a06c;box-shadow:0 10px 35px #143c2924}
+body.light .chest-stage{background:radial-gradient(ellipse at center,#f1d49c50,#f7faf6 75%);border-color:#d2ddce}
+body.light .chest-hint{text-shadow:0 1px 0 #fff,0 2px 10px #ffffffa6;color:#304337}
+body.light .chest-opened-banner{color:#855d22}
+body.light .footnote,body.light footer{color:#60766a}
+body.light button:disabled{opacity:.58}
+body.light .hero .eyebrow{color:#f2d29a}
+@media(max-width:540px){body.light .panel{border-radius:17px}}
