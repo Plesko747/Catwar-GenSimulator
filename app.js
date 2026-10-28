@@ -29,7 +29,7 @@ function openCard(slot){
  c.opened.push(slot);playSound();persist();
  // Reveal only the clicked element: never rebuild or reshuffle the row.
  const button=$('cardArea').querySelector(`[data-slot="${slot}"], [data-paw="${slot}"]`);
- if(button){button.classList.add(button.hasAttribute('data-paw')?'paw-revealed':'open');button.disabled=true;}
+ if(button){if(button.hasAttribute('data-paw')){button.closest('.trail-stop')?.classList.add('trail-open');}else{button.classList.add('open');}button.disabled=true;}
  updateTimers();
  if(c.opened.length===5){renderResult(c);toast('Все параметры раскрыты!')}
 }
@@ -39,7 +39,10 @@ function openChest(){const c=state.current;if(!c||c.chestOpened||chestAnimating)
  const chest=document.querySelector('.treasure-chest');if(chest){chest.classList.add('opening');chest.disabled=true;}
  setTimeout(()=>{if(state.current!==c){chestAnimating=false;return;}c.chestOpened=true;c.opened=[0,1,2,3,4];persist();renderCards();updateTimers();chestAnimating=false},state.motion?1100:100);
 }
-function pawMarkup(c){return c.order.map((idx,slot)=>{const p=STATS[idx],opened=c.opened.includes(slot);return `<button type="button" class="paw-item ${opened?'paw-revealed':''}" data-paw="${slot}" style="--paw-index:${slot}" ${opened?'disabled':''} aria-label="${opened?esc(p.short)+' '+format(c.values[idx]):'Открыть след '+(slot+1)}"><span class="paw-symbol" aria-hidden="true">🐾</span><span class="paw-result"><span class="paw-emoji">${p.emoji}</span><strong>${p.short}</strong><b>${format(c.values[idx])}</b></span></button>`}).join('')}
+function pawMarkup(c){
+ const pawSvg=`<svg class="trail-paw-svg" viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="66" rx="24" ry="20"/><ellipse cx="22" cy="39" rx="10" ry="13" transform="rotate(-22 22 39)"/><ellipse cx="43" cy="23" rx="10" ry="14" transform="rotate(-8 43 23)"/><ellipse cx="65" cy="25" rx="10" ry="14" transform="rotate(12 65 25)"/><ellipse cx="82" cy="43" rx="9" ry="12" transform="rotate(25 82 43)"/></svg>`;
+ return `<div class="forest-trail" role="group" aria-label="Пять следов на лесной тропе"><div class="trail-path" aria-hidden="true"></div><div class="trail-hint">Нажимай на светящиеся следы в любом порядке</div>${c.order.map((idx,slot)=>{const p=STATS[idx],opened=c.opened.includes(slot);return `<div class="trail-stop trail-stop-${slot} ${opened?'trail-open':''}" style="--trail-order:${slot}"><button type="button" class="trail-paw" data-paw="${slot}" ${opened?'disabled':''} aria-label="${opened?esc(p.short)+' '+format(c.values[idx]):'Раскрыть след '+(slot+1)}">${pawSvg}<span class="trail-ripple"></span></button><div class="trail-discovery" aria-live="polite"><span>${p.emoji} ${p.short}</span><strong>${format(c.values[idx])}</strong></div></div>`}).join('')}</div>`;
+}
 function cardMarkup(c){return c.order.map((idx,slot)=>{const s=STATS[idx],open=c.opened.includes(slot);return `<button type="button" class="flip-card ${open?'open':''}" data-slot="${slot}" style="--card-index:${slot}" ${open?'disabled':''} aria-label="${open?esc(s.short)+' '+format(c.values[idx]):'Открыть карту '+(slot+1)}"><span class="flip-inner"><span class="flip-face flip-front"><span class="symbol">✦</span><small>ТАЙНАЯ КАРТА</small></span><span class="flip-face flip-back"><span class="emoji">${s.emoji}</span><strong>${s.short}</strong><span class="value">${format(c.values[idx])}</span></span></span></button>`}).join('')}
 function renderResult(c){
  const target=$('resultArea');target.innerHTML=c.opened.length===5?`<div class="result-box"><span class="eyebrow">ВСЕ ПАРАМЕТРЫ ОТКРЫТЫ</span><h3>Итоговые параметры</h3><p class="muted">🎲 ${esc(modeLabel(c.mode))}</p>${rows(c.values)}<div class="result-actions"><button id="saveCurrent" class="primary">💾 Сохранить результат</button><button id="copyCurrent" class="secondary">📋 Скопировать</button></div></div>`:'';
@@ -56,8 +59,8 @@ function renderCards(){
   area.innerHTML=`<button type="button" class="treasure-chest" id="openChestBtn" aria-label="Открыть сундук"><span class="chest-glow"></span><span class="chest-lid"></span><span class="chest-body"><span class="chest-lock">✦</span></span><span class="chest-hint">Нажми, чтобы открыть сундук</span><span class="chest-sparks" aria-hidden="true">✦ ✧ ✦ ✧ ✦</span></button>`;
   $('openChestBtn').onclick=openChest;renderResult(c);return;
  }
- area.className='card-area'+(isChest?' cards-from-chest':isPaws?' paws-area':'');
- area.innerHTML=(isChest?'<div class="chest-opened-banner">✨ Из сундука выпали открытые карты!</div>':isPaws?'<div class="paw-intro">🐾 Выбери светящийся след, чтобы узнать параметр</div>':'')+(isPaws?pawMarkup(c):cardMarkup(c));
+ area.className=isPaws?'trail-area':'card-area'+(isChest?' cards-from-chest':'');
+ area.innerHTML=(isChest?'<div class="chest-opened-banner">✨ Из сундука выпали открытые карты!</div>':isPaws?'':'')+(isPaws?pawMarkup(c):cardMarkup(c));
  if(isChest){
   // Face-up markup, not a flipped card; no possibility of showing the reverse side.
   area.querySelectorAll('.flip-card').forEach(button=>{button.classList.add('chest-face-up');button.disabled=true;});

@@ -112,3 +112,21 @@ body.light .paw-symbol{filter:drop-shadow(0 0 8px #5f986f)}
 .paws-area .paw-item{width:100%;cursor:pointer}
 .paws-area .paw-item.paw-revealed{cursor:default;opacity:1}
 #genRevealStyle{display:block;margin-bottom:18px}
+
+/* v8.2: independent woodland trail, not cards */
+.trail-area{display:block;margin:25px 0}.forest-trail{height:480px;position:relative;overflow:hidden;border-radius:28px;background:radial-gradient(ellipse at 45% 100%,#6a77533d,transparent 65%),linear-gradient(145deg,#152c2c,#1b3b35 52%,#112a30);border:1px solid #729b7960;isolation:isolate}
+.forest-trail:before,.forest-trail:after{content:"";position:absolute;pointer-events:none;inset:0}.forest-trail:before{background:repeating-linear-gradient(115deg,transparent 0 64px,#81b68c0b 66px 70px,transparent 73px 130px);opacity:.65}.forest-trail:after{background:radial-gradient(ellipse at center,transparent 30%,#08191799 100%)}
+.trail-path{position:absolute;inset:7% 15%;border-radius:48% 52% 42% 58%;transform:rotate(-9deg);background:radial-gradient(ellipse at center,#b8a4762c,#ac9b6c11 45%,transparent 70%);filter:blur(16px)}
+.trail-hint{position:absolute;top:15px;left:0;right:0;text-align:center;color:#d8e9d9;font-size:14px;z-index:3;text-shadow:0 2px 7px #0a1818}
+.trail-stop{position:absolute;z-index:4;display:flex;align-items:center;gap:10px;transform:translate(-50%,-50%)}
+.trail-stop-0{left:20%;top:72%}.trail-stop-1{left:37%;top:51%}.trail-stop-2{left:54%;top:75%}.trail-stop-3{left:68%;top:43%}.trail-stop-4{left:82%;top:67%}
+.trail-paw{position:relative;display:grid;place-items:center;width:86px;height:86px;flex:none;border:0;background:transparent;color:#d7dca1;filter:drop-shadow(0 0 12px #d9f2a077);transition:transform .3s,filter .3s;animation:trailBreathe 2.5s ease-in-out infinite;z-index:2}
+.trail-paw:hover:not(:disabled){transform:scale(1.18) rotate(-9deg);filter:drop-shadow(0 0 18px #f8e6a9)}.trail-paw:disabled{opacity:1;cursor:default;animation:none}
+.trail-paw-svg{width:76px;height:76px;fill:currentColor;transform:rotate(-20deg)}.trail-ripple{position:absolute;inset:4px;border:2px solid #e6dba6;border-radius:50%;opacity:0;pointer-events:none}
+.trail-discovery{position:absolute;left:76px;top:50%;transform:translateY(-50%) translateX(-10px);min-width:116px;display:flex;flex-direction:column;gap:1px;color:#fff2cf;text-shadow:0 2px 8px #071719;opacity:0;transition:opacity .45s,transform .45s;pointer-events:none;white-space:nowrap;font-size:15px;font-weight:700}.trail-discovery strong{font-size:25px;color:#ffde8c}
+.trail-stop-3 .trail-discovery,.trail-stop-4 .trail-discovery{left:auto;right:76px;text-align:right}
+.trail-open .trail-paw{color:#9ad3b3;filter:drop-shadow(0 0 12px #7cddac);transform:scale(.8)}.trail-open .trail-ripple{animation:trailRing .7s ease-out forwards}.trail-open .trail-discovery{opacity:1;transform:translateY(-50%) translateX(0)}
+body.light .forest-trail{background:linear-gradient(145deg,#d8e8d4,#b9d6bb 55%,#dce8cf);border-color:#9cbca3}body.light .forest-trail:after{background:radial-gradient(ellipse at center,transparent 40%,#54735a55)}body.light .trail-hint{color:#234e3b;text-shadow:none}body.light .trail-paw{color:#517b57}body.light .trail-discovery{color:#244b35;text-shadow:0 1px 2px #ffffffaa}body.light .trail-discovery strong{color:#795322}
+@keyframes trailBreathe{50%{filter:drop-shadow(0 0 23px #e3e6a3)}}@keyframes trailRing{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(1.8)}}
+@media(max-width:680px){.forest-trail{height:600px}.trail-stop-0{left:22%;top:78%}.trail-stop-1{left:39%;top:60%}.trail-stop-2{left:25%;top:40%}.trail-stop-3{left:62%;top:26%}.trail-stop-4{left:69%;top:82%}.trail-paw{width:66px;height:66px}.trail-paw-svg{width:60px;height:60px}.trail-discovery{left:56px;min-width:80px;font-size:12px}.trail-discovery strong{font-size:20px}.trail-stop-3 .trail-discovery,.trail-stop-4 .trail-discovery{right:56px}}
+@media(prefers-reduced-motion:reduce){.trail-paw{animation:none}.trail-open .trail-ripple{animation:none}.trail-discovery{transition:none}}
