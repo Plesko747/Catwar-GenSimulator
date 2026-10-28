@@ -57,8 +57,7 @@ function renderResult(c){
 }
 function renderCards(){
  const c=state.current,style=c?.revealStyle||state.revealStyle,isChest=style==='chests',isPaws=style==='paws';
- $('revealHeading').textContent=isChest?'Сундук судьбы':isPaws?'Следы судьбы':'Карты судьбы';
- $('revealBadge').textContent=isChest?'1 сундук → 5 открытых карт':isPaws?'5 следов':'5 карт';
+
  if(!c){$('cardArea').className='card-area';$('cardArea').innerHTML='<div class="empty-state">✦<br>Выбери режим и начни открытие</div>';$('resultArea').innerHTML='';return}
  const area=$('cardArea');
  if(isChest&&!c.chestOpened){
