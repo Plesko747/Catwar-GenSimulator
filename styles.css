@@ -101,3 +101,14 @@ body.light .paw-symbol{filter:drop-shadow(0 0 8px #5f986f)}
 @media(max-width:800px){.paws-area{grid-template-columns:repeat(3,minmax(0,1fr))}.paw-item{min-height:170px}}
 @media(max-width:540px){.paws-area{grid-template-columns:repeat(2,minmax(0,1fr))}.paw-item{min-height:175px}}
 @media(prefers-reduced-motion:reduce){.paw-symbol{animation:none}.paw-item,.paw-result{transition:none}}
+
+/* v8.1: chest cards are physically face-up, no flip state or click handler. */
+.cards-from-chest .flip-card.chest-face-up{opacity:1;pointer-events:none;cursor:default}
+.cards-from-chest .flip-card.chest-face-up .flip-inner,
+.cards-from-chest .flip-card.chest-face-up.open .flip-inner{transform:none!important}
+.cards-from-chest .flip-card.chest-face-up .flip-front{display:none!important}
+.cards-from-chest .flip-card.chest-face-up .flip-back{transform:none!important;backface-visibility:visible!important}
+/* Paw mode never inherits card styling. */
+.paws-area .paw-item{width:100%;cursor:pointer}
+.paws-area .paw-item.paw-revealed{cursor:default;opacity:1}
+#genRevealStyle{display:block;margin-bottom:18px}
