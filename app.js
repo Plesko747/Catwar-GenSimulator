@@ -23,14 +23,16 @@ function playSound(force=false,kind='reveal'){
  sfxPlayer=new Audio(src);sfxPlayer.volume=Math.min(1,Math.max(0,(state.soundVolume??75)/100));
  sfxPlayer.play().catch(()=>{if(force)toast('Звуковой файл отсутствует. Проверь assets/audio.')});
 }
-function startGen(){if(state.current&&state.current.opened.length<5){toast('Сначала открой все пять предметов текущей комбинации');return}const values=generate(state.mode);state.current={values,mode:state.mode,order:shuffle([0,1,2,3,4]),opened:state.revealStyle==='quick'?[0,1,2,3,4]:[],chestOpened:false,revealStyle:state.revealStyle,id:Date.now()};persist();renderCards();updateTimers()}
+function startGen(){if(state.current&&state.current.opened.length<5){toast('Сначала открой все пять предметов текущей комбинации');return}const values=generate(state.mode);state.current={values,mode:state.mode,order:state.revealStyle==='cards'?[0,1,2,3,4]:shuffle([0,1,2,3,4]),opened:state.revealStyle==='quick'?[0,1,2,3,4]:[],chestOpened:false,revealStyle:state.revealStyle,id:Date.now()};persist();renderCards();updateTimers()}
 function openCard(slot){
  const c=state.current;if(!c||c.opened.includes(slot))return;
+ if(c.revealStyle==='paws'&&slot!==c.opened.length)return;
  c.opened.push(slot);playSound();persist();
  // Reveal only the clicked element: never rebuild or reshuffle the row.
  const button=$('cardArea').querySelector(`[data-slot="${slot}"], [data-paw="${slot}"]`);
  if(button){if(button.hasAttribute('data-paw')){button.classList.add('revealed');button.setAttribute('aria-disabled','true');button.setAttribute('tabindex','-1');}else{button.classList.add('open');}if(button instanceof HTMLButtonElement)button.disabled=true;}
  updateTimers();
+ if(c.revealStyle==='paws')renderCards();
  if(c.opened.length===5){renderResult(c);toast('Все параметры раскрыты!')}
 }
 let chestAnimating=false;
@@ -48,9 +50,9 @@ function pawMarkup(c){
     <g class="paw-symbol" transform="rotate(-18)"><ellipse cx="0" cy="13" rx="22" ry="17"/><ellipse cx="-27" cy="-12" rx="9" ry="12"/><ellipse cx="-9" cy="-27" rx="9" ry="12"/><ellipse cx="13" cy="-27" rx="9" ry="12"/><ellipse cx="30" cy="-10" rx="8" ry="11"/></g>
     <circle class="paw-wave" r="35"/><g class="paw-label" transform="translate(${tx} -3)"><text text-anchor="${align}" class="paw-name">${esc(p.short)}</text><text text-anchor="${align}" y="30" class="paw-percent">${format(c.values[idx])}</text></g>
   </g>`};
- return `<div class="forest-trail paw-scene"><div class="trail-hint">Нажми на светящиеся следы на тропе</div><svg class="trail-illustration" viewBox="0 0 900 470" role="group" aria-label="Пять отпечатков лап на лесной тропе"><defs><linearGradient id="trailSoil" x1="0" x2="1"><stop stop-color="#97794b" stop-opacity=".15"/><stop offset=".5" stop-color="#c9ac70" stop-opacity=".4"/><stop offset="1" stop-color="#97794b" stop-opacity=".15"/></linearGradient></defs><path class="winding-trail" d="M100 480 Q35 340 270 340 T420 250 T660 250 T850 100"/><path class="trail-dashes" d="M100 480 Q35 340 270 340 T420 250 T660 250 T850 100"/>${c.order.map((idx,slot)=>paw(...places[slot],slot,idx)).join('')}</svg></div>`;
+ return `<div class="forest-trail paw-scene"><div class="trail-hint">Нажми на лапку, чтобы открыть параметр. Следующая появится после открытия.</div><svg class="trail-illustration" viewBox="0 0 900 470" role="group" aria-label="Пять отпечатков лап на лесной тропе"><defs><linearGradient id="trailSoil" x1="0" x2="1"><stop stop-color="#97794b" stop-opacity=".15"/><stop offset=".5" stop-color="#c9ac70" stop-opacity=".4"/><stop offset="1" stop-color="#97794b" stop-opacity=".15"/></linearGradient></defs><path class="winding-trail" d="M100 480 Q35 340 270 340 T420 250 T660 250 T850 100"/><path class="trail-dashes" d="M100 480 Q35 340 270 340 T420 250 T660 250 T850 100"/>${c.order.map((idx,slot)=>slot<=c.opened.length?paw(...places[slot],slot,idx):'').join('')}</svg></div>`;
 }
-function cardMarkup(c){return c.order.map((idx,slot)=>{const s=STATS[idx],open=c.opened.includes(slot);return `<button type="button" class="flip-card ${open?'open':''}" data-slot="${slot}" style="--card-index:${slot}" ${open?'disabled':''} aria-label="${open?esc(s.short)+' '+format(c.values[idx]):'Открыть карту '+(slot+1)}"><span class="flip-inner"><span class="flip-face flip-front"><span class="symbol">✦</span><small>ТАЙНАЯ КАРТА</small></span><span class="flip-face flip-back"><span class="emoji">${s.emoji}</span><strong>${s.short}</strong><span class="value">${format(c.values[idx])}</span></span></span></button>`}).join('')}
+function cardMarkup(c){return c.order.map((idx,slot)=>{const s=STATS[idx],open=c.opened.includes(slot);return `<button type="button" class="flip-card ${open?'open':''}" data-slot="${slot}" style="--card-index:${slot}" ${open?'disabled':''} aria-label="${open?esc(s.short)+' '+format(c.values[idx]):'Открыть '+esc(s.short)}"><span class="flip-inner"><span class="flip-face flip-front"><span class="symbol">${s.emoji}</span></span><span class="flip-face flip-back"><span class="emoji">${s.emoji}</span><strong>${s.short}</strong><span class="value">${format(c.values[idx])}</span></span></span></button>`}).join('')}
 function renderResult(c){
  const target=$('resultArea');target.innerHTML=c.opened.length===5?`<div class="result-box"><span class="eyebrow">ВСЕ ПАРАМЕТРЫ ОТКРЫТЫ</span><h3>Итоговые параметры</h3><p class="muted">🎲 ${esc(modeLabel(c.mode))}</p>${rows(c.values)}<div class="result-actions"><button id="saveCurrent" class="primary">💾 Сохранить результат</button><button id="copyCurrent" class="secondary">📋 Скопировать</button></div></div>`:'';
  if(c.opened.length===5){$('saveCurrent').onclick=saveCurrent;$('copyCurrent').onclick=()=>copyResult(c)}
