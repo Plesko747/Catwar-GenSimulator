@@ -100,9 +100,33 @@ function normalizeBadBlocks(){
   else state.badBlocks=state.badActive.map((v,i)=>v?{name:`Неприемлемая комбинация ${i+1}`,ranges:state.badActive.map((_,j)=>i===j?{min:state.badMins[j],max:state.badMaxs[j]}:null)}:null).filter(Boolean);
  }
 }
+function parseRangeNumber(raw){
+ const value=String(raw).trim().replace(',', '.');
+ if(!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value))return NaN;
+ return Number(value);
+}
+function validateBlockInputs(container){
+ const rows=container.querySelectorAll('.range-row');
+ let hasErrors=false;
+ rows.forEach(row=>{
+  const inputs=[...row.querySelectorAll('input[data-good-min],input[data-good-max],input[data-bad-min],input[data-bad-max]')];
+  if(inputs.length!==2)return;
+  const values=inputs.map(input=>input.value.trim()===''?null:parseRangeNumber(input.value));
+  const invalid=values.map(v=>v!==null&&(!Number.isFinite(v)||v<0||v>100||Math.abs(v*10-Math.round(v*10))>1e-6));
+  if(!invalid.some(Boolean)&&values[0]!==null&&values[1]!==null&&values[0]>values[1]){invalid[0]=true;invalid[1]=true;}
+  inputs.forEach((input,i)=>{input.classList.toggle('range-invalid',invalid[i]);input.setAttribute('aria-invalid',String(invalid[i]));input.title=invalid[i]?'Введите значение от 0 до 100 с точностью до 0,1; «От» не должно превышать «До».':'';});
+  if(invalid.some(Boolean))hasErrors=true;
+ });
+ return !hasErrors;
+}
+function bindBlockValidation(container){
+ container.addEventListener('input',e=>{if(e.target.matches('input[data-good-min],input[data-good-max],input[data-bad-min],input[data-bad-max]'))validateBlockInputs(container)});
+ validateBlockInputs(container);
+}
 function renderBadRanges(){
  normalizeBadBlocks();$('badEnabled').checked=!!state.badEnabled;$('badOptions').hidden=!state.badEnabled;
- $('badBlocks').innerHTML=state.badBlocks.map((b,k)=>`<div class="bad-block"><div class="bad-block-head"><label>Название <input type="text" maxlength="70" data-bad-name="${k}" value="${esc(b.name||'')}"></label><button type="button" class="danger" data-bad-remove="${k}">🗑 Удалить</button></div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="number" min="0" max="100" step="0.1" placeholder="—" data-bad-min="${k}-${i}" value="${b.ranges?.[i]?.min===undefined?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="number" min="0" max="100" step="0.1" placeholder="—" data-bad-max="${k}-${i}" value="${b.ranges?.[i]?.max===undefined?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
+ $('badBlocks').innerHTML=state.badBlocks.map((b,k)=>`<div class="bad-block"><div class="bad-block-head"><label>Название <input type="text" maxlength="70" data-bad-name="${k}" value="${esc(b.name||'')}"></label><button type="button" class="danger" data-bad-remove="${k}">🗑 Удалить</button></div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
+ validateBlockInputs($('badBlocks'));
  $('badEnabled').onchange=e=>{state.badEnabled=e.target.checked;$('badOptions').hidden=!state.badEnabled;persist()};
  $('addBadBlock').onclick=()=>{state.badBlocks.push({name:`Неприемлемая комбинация ${state.badBlocks.length+1}`,ranges:Array(5).fill(null)});persist();renderBadRanges()};
  $('badBlocks').querySelectorAll('[data-bad-remove]').forEach(el=>el.onclick=()=>{state.badBlocks.splice(Number(el.dataset.badRemove),1);persist();renderBadRanges()});
@@ -110,7 +134,8 @@ function renderBadRanges(){
  $('badBlocks').querySelectorAll('[data-bad-min],[data-bad-max]').forEach(el=>el.onchange=()=>{
   const key=el.dataset.badMin||el.dataset.badMax;const [k,i]=key.split('-').map(Number);
   const a=document.querySelector(`[data-bad-min="${k}-${i}"]`).value.trim(),b=document.querySelector(`[data-bad-max="${k}-${i}"]`).value.trim();
-  state.badBlocks[k].ranges[i]=a===''&&b===''?null:{min:a===''?null:Math.round(Number(a)*10),max:b===''?null:Math.round(Number(b)*10)};persist();
+  if(!validateBlockInputs($('badBlocks')))return;
+  state.badBlocks[k].ranges[i]=a===''&&b===''?null:{min:a===''?null:Math.round(parseRangeNumber(a)*10),max:b===''?null:Math.round(parseRangeNumber(b)*10)};persist();
  });
 }
 function badConstraints(){
@@ -121,9 +146,8 @@ function badConstraints(){
   for(let i=0;i<5;i++){
    const a=document.querySelector(`[data-bad-min="${k}-${i}"]`).value.trim(),z=document.querySelector(`[data-bad-max="${k}-${i}"]`).value.trim();
    if(a===''&&z==='')continue;
-   if(a===''||z==='')return {error:`Заполни обе границы в блоке №${k+1} (${STATS[i].full})`};
-   const x=Number(a),y=Number(z);
-   if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y>100||x>y||Math.abs(x*10-Math.round(x*10))>1e-6||Math.abs(y*10-Math.round(y*10))>1e-6)return {error:`Проверь диапазон в блоке №${k+1}: ${STATS[i].full}`};
+   const x=a===''?0:parseRangeNumber(a),y=z===''?100:parseRangeNumber(z);
+   if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>100||y<0||y>100||x>y||Math.abs(x*10-Math.round(x*10))>1e-6||Math.abs(y*10-Math.round(y*10))>1e-6)return {error:`Проверь диапазон в блоке №${k+1}: ${STATS[i].full}`};
    mins[i]=Math.round(x*10);maxs[i]=Math.round(y*10);conditions.push(i);
   }
   if(conditions.length)blocks.push({name:b.name.trim()||`Неприемлемая комбинация ${k+1}`,mins,maxs,conditions});
@@ -142,15 +166,17 @@ function ensureGoodBlock(){
 }
 function renderGoodRanges(){
  ensureGoodBlock();$('goodOptions').hidden=false;
- $('goodBlocks').innerHTML=state.goodBlocks.map((b,k)=>`<div class="good-block"><div class="good-block-head"><label>Название <input type="text" maxlength="70" data-good-name="${k}" value="${esc(b.name||'')}"></label>${state.goodBlocks.length>1?`<button type="button" class="danger" data-good-remove="${k}">🗑 Удалить</button>`:`<span class="muted">Обязательный блок</span>`}</div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="number" min="0" max="100" step="0.1" placeholder="—" data-good-min="${k}-${i}" value="${b.ranges?.[i]?.min===undefined?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="number" min="0" max="100" step="0.1" placeholder="—" data-good-max="${k}-${i}" value="${b.ranges?.[i]?.max===undefined?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
+ $('goodBlocks').innerHTML=state.goodBlocks.map((b,k)=>`<div class="good-block"><div class="good-block-head"><label>Название <input type="text" maxlength="70" data-good-name="${k}" value="${esc(b.name||'')}"></label>${state.goodBlocks.length>1?`<button type="button" class="danger" data-good-remove="${k}">🗑 Удалить</button>`:`<span class="muted">Обязательный блок</span>`}</div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
  
+ validateBlockInputs($('goodBlocks'));
  $('addGoodBlock').onclick=()=>{state.goodBlocks.push({name:`Желаемая комбинация ${state.goodBlocks.length+1}`,ranges:Array(5).fill(null)});persist();renderGoodRanges()};
  $('goodBlocks').querySelectorAll('[data-good-remove]').forEach(el=>el.onclick=()=>{if(state.goodBlocks.length<=1)return;state.goodBlocks.splice(Number(el.dataset.goodRemove),1);persist();renderGoodRanges()});
  $('goodBlocks').querySelectorAll('[data-good-name]').forEach(el=>el.oninput=()=>{state.goodBlocks[Number(el.dataset.goodName)].name=el.value.slice(0,70);persist()});
  $('goodBlocks').querySelectorAll('[data-good-min],[data-good-max]').forEach(el=>el.onchange=()=>{
   const key=el.dataset.goodMin||el.dataset.goodMax;const [k,i]=key.split('-').map(Number);
   const a=document.querySelector(`[data-good-min="${k}-${i}"]`).value.trim(),b=document.querySelector(`[data-good-max="${k}-${i}"]`).value.trim();
-  state.goodBlocks[k].ranges[i]=a===''&&b===''?null:{min:a===''?null:Math.round(Number(a)*10),max:b===''?null:Math.round(Number(b)*10)};persist();
+  if(!validateBlockInputs($('goodBlocks')))return;
+  state.goodBlocks[k].ranges[i]=a===''&&b===''?null:{min:a===''?null:Math.round(parseRangeNumber(a)*10),max:b===''?null:Math.round(parseRangeNumber(b)*10)};persist();
  });
 }
 function goodConstraints(){
@@ -161,9 +187,8 @@ function goodConstraints(){
   for(let i=0;i<5;i++){
    const a=document.querySelector(`[data-good-min="${k}-${i}"]`).value.trim(),z=document.querySelector(`[data-good-max="${k}-${i}"]`).value.trim();
    if(a===''&&z==='')continue;
-   if(a===''||z==='')return {error:`Заполни обе границы в блоке №${k+1} (${STATS[i].full})`};
-   const x=Number(a),y=Number(z);
-   if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y>100||x>y||Math.abs(x*10-Math.round(x*10))>1e-6||Math.abs(y*10-Math.round(y*10))>1e-6)return {error:`Проверь диапазон в блоке №${k+1}: ${STATS[i].full}`};
+   const x=a===''?0:parseRangeNumber(a),y=z===''?100:parseRangeNumber(z);
+   if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>100||y<0||y>100||x>y||Math.abs(x*10-Math.round(x*10))>1e-6||Math.abs(y*10-Math.round(y*10))>1e-6)return {error:`Проверь диапазон в блоке №${k+1}: ${STATS[i].full}`};
    mins[i]=Math.round(x*10);maxs[i]=Math.round(y*10);conditions.push(i);
   }
   if(conditions.length)blocks.push({name:b.name.trim()||`Желаемая комбинация ${k+1}`,mins,maxs,conditions});
@@ -289,4 +314,4 @@ function saveChancePreset(){
  const preset=snapshotChanceConditions();preset.name=name.trim().slice(0,70)||`Набор ${state.chancePresets.length+1}`;
  state.chancePresets.unshift(preset);persist();renderChancePresets();toast('Условия сохранены');
 }
-function setup(){ensureGoodBlock();persist();modeSelect($('genMode'),state.mode);renderChanceModes();modeSelect($('savedFilter'),'all');$('savedFilter').insertAdjacentHTML('afterbegin','<option value="all">Все режимы</option>');$('savedFilter').value='all';desc('genDescription',state.mode);theme();renderCards();renderGoodRanges();renderBadRanges();renderChanceResult(state.lastChance);renderChancePresets();updateCount();updateTimers();document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$('themeBtn').onclick=()=>{state.theme=state.theme==='dark'?'light':'dark';persist();theme()};$('genMode').onchange=e=>{state.mode=e.target.value;persist();desc('genDescription',state.mode)};$('generateBtn').onclick=startGen;$('calcBtn').onclick=startCalc;$('chanceSort').onchange=()=>renderChanceResult(state.lastChance);$('savedFilter').onchange=renderSaved;$('savedSort').onchange=renderSaved;$('soundToggle').onchange=e=>{state.sound=e.target.checked;persist()};$('soundStyle').onchange=e=>{state.soundStyle=e.target.value;persist();playSound(true)};$('soundPreview').onclick=()=>playSound(true);$('soundVolume').oninput=e=>{state.soundVolume=Number(e.target.value);persist()};$('revealStyle').onchange=e=>{state.revealStyle=e.target.value;persist();if(!state.current)renderCards();else toast('Способ открытия применится к следующей генерации')};$('motionToggle').onchange=e=>{state.motion=e.target.checked;persist();theme()};$('exportBtn').onclick=downloadData;$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2_000_000)throw Error('Файл слишком большой');const data=validateBackup(JSON.parse(await file.text()));if(!confirm('Заменить текущие локальные данные данными из файла?'))return;worker?.terminate();state=data;persist();location.reload()}catch(err){toast('Импорт не выполнен: '+err.message)}finally{e.target.value=''}};$('saveChancePresetBtn').onclick=saveChancePreset;$('clearHistoryBtn').onclick=()=>{if(!state.history.length){toast('История уже пуста');return}if(confirm('Удалить всю историю расчётов? Это действие нельзя отменить.')){state.history=[];persist();renderHistory();toast('История расчётов очищена')}};$('clearBtn').onclick=()=>{if(confirm('Безвозвратно удалить ВСЕ сохранения, историю и настройки?')){worker?.terminate();localStorage.removeItem(KEY);location.reload()}}}setup();
+function setup(){bindBlockValidation($('goodBlocks'));bindBlockValidation($('badBlocks'));ensureGoodBlock();persist();modeSelect($('genMode'),state.mode);renderChanceModes();modeSelect($('savedFilter'),'all');$('savedFilter').insertAdjacentHTML('afterbegin','<option value="all">Все режимы</option>');$('savedFilter').value='all';desc('genDescription',state.mode);theme();renderCards();renderGoodRanges();renderBadRanges();renderChanceResult(state.lastChance);renderChancePresets();updateCount();updateTimers();document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));$('themeBtn').onclick=()=>{state.theme=state.theme==='dark'?'light':'dark';persist();theme()};$('genMode').onchange=e=>{state.mode=e.target.value;persist();desc('genDescription',state.mode)};$('generateBtn').onclick=startGen;$('calcBtn').onclick=startCalc;$('chanceSort').onchange=()=>renderChanceResult(state.lastChance);$('savedFilter').onchange=renderSaved;$('savedSort').onchange=renderSaved;$('soundToggle').onchange=e=>{state.sound=e.target.checked;persist()};$('soundStyle').onchange=e=>{state.soundStyle=e.target.value;persist();playSound(true)};$('soundPreview').onclick=()=>playSound(true);$('soundVolume').oninput=e=>{state.soundVolume=Number(e.target.value);persist()};$('revealStyle').onchange=e=>{state.revealStyle=e.target.value;persist();if(!state.current)renderCards();else toast('Способ открытия применится к следующей генерации')};$('motionToggle').onchange=e=>{state.motion=e.target.checked;persist();theme()};$('exportBtn').onclick=downloadData;$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2_000_000)throw Error('Файл слишком большой');const data=validateBackup(JSON.parse(await file.text()));if(!confirm('Заменить текущие локальные данные данными из файла?'))return;worker?.terminate();state=data;persist();location.reload()}catch(err){toast('Импорт не выполнен: '+err.message)}finally{e.target.value=''}};$('saveChancePresetBtn').onclick=saveChancePreset;$('clearHistoryBtn').onclick=()=>{if(!state.history.length){toast('История уже пуста');return}if(confirm('Удалить всю историю расчётов? Это действие нельзя отменить.')){state.history=[];persist();renderHistory();toast('История расчётов очищена')}};$('clearBtn').onclick=()=>{if(confirm('Безвозвратно удалить ВСЕ сохранения, историю и настройки?')){worker?.terminate();localStorage.removeItem(KEY);location.reload()}}}setup();
