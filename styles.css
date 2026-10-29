@@ -243,3 +243,15 @@ select{scroll-margin-bottom:180px}
 #chance .good-block.block-input-invalid,#chance .bad-block.block-input-invalid{border:2px solid #e14b4b;background:rgba(220,55,55,.09)}
 #chance .range-row.range-row-invalid{border-color:#e14b4b;background:rgba(220,55,55,.08)}
 @media(max-width:600px){#chance #goodBlocks,#chance #badBlocks{grid-template-columns:minmax(0,1fr);gap:9px}#chance .good-block,#chance .bad-block{padding:8px}#chance .good-block .range-row,#chance .bad-block .range-row{grid-template-columns:minmax(80px,1fr) minmax(0,72px) minmax(0,72px);gap:4px;padding:4px}#chance .range-row span{font-size:12px}}
+
+/* v10.19: prominent overall probabilities and grouped history */
+.total-highlight{display:flex;flex-direction:column;gap:5px;padding:15px 17px!important;border-radius:12px;border:2px solid var(--border,#777);margin:12px 0 14px!important}
+.total-good{border-color:#2ca66a;background:rgba(44,166,106,.10)}
+.total-bad{border-color:#d65b5b;background:rgba(214,91,91,.10)}
+.total-highlight .total-label{font-size:.78rem;font-weight:800;letter-spacing:.045em}
+.total-highlight>strong{font-size:clamp(1.6rem,3vw,2.25rem);line-height:1.15;font-variant-numeric:tabular-nums}
+.total-highlight p{margin:3px 0 0!important}
+.history-modes{font-size:.86rem;opacity:.8;margin:7px 0 3px;line-height:1.5}
+.history-mode-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.2);font-size:.87rem}
+.history-mode-row b{flex:1 1 155px}
+.history-mode-row span{font-variant-numeric:tabular-nums;white-space:nowrap}
