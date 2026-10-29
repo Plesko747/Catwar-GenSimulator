@@ -149,3 +149,6 @@ body.light .forest-trail{background:linear-gradient(145deg,#d8e8d4,#b9d6bb 55%,#
 body.light .paw-scene{background:radial-gradient(ellipse at 55% 70%,#c8ddbb,#a7cdb4 58%,#7caf9b)}
 body.light .paw-label{stroke:#f1f6e8;fill:#234b36}body.light .paw-percent{fill:#73521b}
 @media(max-width:600px){.paw-scene{aspect-ratio:900/570}.trail-illustration{min-height:320px}.paw-name{font-size:23px}.paw-percent{font-size:29px}}
+
+/* Quick reveal: show the final result only. */
+.card-area.quick-stage{display:none!important;}
