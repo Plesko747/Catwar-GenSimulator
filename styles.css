@@ -255,3 +255,10 @@ select{scroll-margin-bottom:180px}
 .history-mode-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.2);font-size:.87rem}
 .history-mode-row b{flex:1 1 155px}
 .history-mode-row span{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* v10.20: включение отдельных блоков условий */
+#chance .block-toggle{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;min-width:auto;margin:0;font-size:12px;font-weight:650;white-space:nowrap;cursor:pointer}
+#chance .block-toggle input{width:16px;height:16px;margin:0;accent-color:var(--accent,#57a783)}
+#chance .good-block.block-disabled,#chance .bad-block.block-disabled{opacity:.56;border-style:dashed}
+#chance .block-disabled .range-rows{opacity:.72}
+@media(max-width:600px){#chance .block-toggle{order:0}#chance .good-block-head label:not(.block-toggle),#chance .bad-block-head label:not(.block-toggle){flex-basis:100%;order:2}}

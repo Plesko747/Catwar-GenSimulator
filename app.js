@@ -131,11 +131,12 @@ function bindBlockValidation(container){
 }
 function renderBadRanges(){
  normalizeBadBlocks();$('badEnabled').checked=!!state.badEnabled;$('badOptions').hidden=!state.badEnabled;
- $('badBlocks').innerHTML=state.badBlocks.map((b,k)=>`<div class="bad-block"><div class="bad-block-head"><label>Название <input type="text" maxlength="70" data-bad-name="${k}" value="${esc(b.name||'')}"></label><button type="button" class="danger" data-bad-remove="${k}">🗑 Удалить</button></div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
+ $('badBlocks').innerHTML=state.badBlocks.map((b,k)=>`<div class="bad-block ${b.enabled===false?'block-disabled':''}"><div class="bad-block-head"><label class="block-toggle"><input type="checkbox" data-bad-enabled="${k}" ${b.enabled===false?'':'checked'}> Учитывать</label><label>Название <input type="text" maxlength="70" data-bad-name="${k}" value="${esc(b.name||'')}"></label><button type="button" class="danger" data-bad-remove="${k}">🗑 Удалить</button></div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-bad-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
  validateBlockInputs($('badBlocks'));
- $('badEnabled').onchange=e=>{state.badEnabled=e.target.checked;$('badOptions').hidden=!state.badEnabled;persist()};
+ $('badEnabled').onchange=e=>{state.badEnabled=e.target.checked;$('badOptions').hidden=!state.badEnabled;if(!state.badEnabled){ensureGoodBlock();state.goodBlocks[0].enabled=true;}persist();renderGoodRanges()};
  $('addBadBlock').onclick=()=>{state.badBlocks.push({name:`Неприемлемая комбинация ${state.badBlocks.length+1}`,ranges:Array(5).fill(null)});persist();renderBadRanges()};
  $('badBlocks').querySelectorAll('[data-bad-remove]').forEach(el=>el.onclick=()=>{state.badBlocks.splice(Number(el.dataset.badRemove),1);persist();renderBadRanges()});
+ $('badBlocks').querySelectorAll('[data-bad-enabled]').forEach(el=>el.onchange=()=>{state.badBlocks[Number(el.dataset.badEnabled)].enabled=el.checked;el.closest('.bad-block').classList.toggle('block-disabled',!el.checked);persist()});
  $('badBlocks').querySelectorAll('[data-bad-name]').forEach(el=>el.oninput=()=>{state.badBlocks[Number(el.dataset.badName)].name=el.value.slice(0,70);persist()});
  $('badBlocks').querySelectorAll('[data-bad-min],[data-bad-max]').forEach(el=>el.onchange=()=>{
   const key=el.dataset.badMin||el.dataset.badMax;const [k,i]=key.split('-').map(Number);
@@ -149,6 +150,7 @@ function badConstraints(){
  const blocks=[];
  for(let k=0;k<state.badBlocks.length;k++){
   const b=state.badBlocks[k],mins=Array(5).fill(0),maxs=Array(5).fill(1000),conditions=[];
+  if(b.enabled===false)continue;
   for(let i=0;i<5;i++){
    const a=document.querySelector(`[data-bad-min="${k}-${i}"]`).value.trim(),z=document.querySelector(`[data-bad-max="${k}-${i}"]`).value.trim();
    if(a===''&&z==='')continue;
@@ -158,7 +160,7 @@ function badConstraints(){
   }
   if(conditions.length)blocks.push({name:b.name.trim()||`Неприемлемая комбинация ${k+1}`,mins,maxs,conditions});
  }
- if(!blocks.length)return {error:'Добавь хотя бы один блок с заполненными диапазонами'};
+ if(!blocks.length)return {error:'Включи хотя бы один блок с заполненными диапазонами'};
  if(blocks.length>12)return {error:'Для точного расчёта можно использовать не более 12 заполненных блоков'};
  return blocks;
 }
@@ -171,12 +173,13 @@ function ensureGoodBlock(){
  state.goodEnabled=true;
 }
 function renderGoodRanges(){
- ensureGoodBlock();$('goodOptions').hidden=false;
- $('goodBlocks').innerHTML=state.goodBlocks.map((b,k)=>`<div class="good-block"><div class="good-block-head"><label>Название <input type="text" maxlength="70" data-good-name="${k}" value="${esc(b.name||'')}"></label>${state.goodBlocks.length>1?`<button type="button" class="danger" data-good-remove="${k}">🗑 Удалить</button>`:`<span class="muted">Обязательный блок</span>`}</div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
+ ensureGoodBlock();if(!state.badEnabled)state.goodBlocks[0].enabled=true;$('goodOptions').hidden=false;
+ $('goodBlocks').innerHTML=state.goodBlocks.map((b,k)=>`<div class="good-block ${b.enabled===false?'block-disabled':''}"><div class="good-block-head"><label class="block-toggle"><input type="checkbox" data-good-enabled="${k}" ${b.enabled===false?'':'checked'} ${k===0&&!state.badEnabled?'disabled title="Включи неприемлемые комбинации, чтобы отключить этот блок"':''}> Учитывать</label><label>Название <input type="text" maxlength="70" data-good-name="${k}" value="${esc(b.name||'')}"></label>${state.goodBlocks.length>1?`<button type="button" class="danger" data-good-remove="${k}">🗑 Удалить</button>`:`<span class="muted">Обязательный блок</span>`}</div><div class="range-rows">${STATS.map((st,i)=>`<div class="range-row"><span>${st.emoji} <b>${st.full}</b></span><label><small>От, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-min="${k}-${i}" value="${b.ranges?.[i]?.min==null?'':b.ranges[i].min/10}"></label><label><small>До, %</small><input type="text" inputmode="decimal" autocomplete="off" placeholder="—" data-good-max="${k}-${i}" value="${b.ranges?.[i]?.max==null?'':b.ranges[i].max/10}"></label></div>`).join('')}</div></div>`).join('');
  
  validateBlockInputs($('goodBlocks'));
  $('addGoodBlock').onclick=()=>{state.goodBlocks.push({name:`Желаемая комбинация ${state.goodBlocks.length+1}`,ranges:Array(5).fill(null)});persist();renderGoodRanges()};
  $('goodBlocks').querySelectorAll('[data-good-remove]').forEach(el=>el.onclick=()=>{if(state.goodBlocks.length<=1)return;state.goodBlocks.splice(Number(el.dataset.goodRemove),1);persist();renderGoodRanges()});
+ $('goodBlocks').querySelectorAll('[data-good-enabled]').forEach(el=>el.onchange=()=>{if(Number(el.dataset.goodEnabled)===0&&!state.badEnabled){el.checked=true;return}state.goodBlocks[Number(el.dataset.goodEnabled)].enabled=el.checked;el.closest('.good-block').classList.toggle('block-disabled',!el.checked);persist()});
  $('goodBlocks').querySelectorAll('[data-good-name]').forEach(el=>el.oninput=()=>{state.goodBlocks[Number(el.dataset.goodName)].name=el.value.slice(0,70);persist()});
  $('goodBlocks').querySelectorAll('[data-good-min],[data-good-max]').forEach(el=>el.onchange=()=>{
   const key=el.dataset.goodMin||el.dataset.goodMax;const [k,i]=key.split('-').map(Number);
@@ -190,6 +193,7 @@ function goodConstraints(){
  const blocks=[];
  for(let k=0;k<state.goodBlocks.length;k++){
   const b=state.goodBlocks[k],mins=Array(5).fill(0),maxs=Array(5).fill(1000),conditions=[];
+  if(b.enabled===false)continue;
   for(let i=0;i<5;i++){
    const a=document.querySelector(`[data-good-min="${k}-${i}"]`).value.trim(),z=document.querySelector(`[data-good-max="${k}-${i}"]`).value.trim();
    if(a===''&&z==='')continue;
@@ -199,7 +203,7 @@ function goodConstraints(){
   }
   if(conditions.length)blocks.push({name:b.name.trim()||`Желаемая комбинация ${k+1}`,mins,maxs,conditions});
  }
- if(!blocks.length)return {error:'Добавь хотя бы один блок с заполненными диапазонами'};
+ if(!blocks.length)return state.badEnabled?[]:{error:'Включи хотя бы один желаемый блок с заполненными диапазонами'};
  if(blocks.length>12)return {error:'Для точного расчёта можно использовать не более 12 заполненных блоков'};
  return blocks;
 }
@@ -209,7 +213,7 @@ function renderChanceModes(){const modes=Array.isArray(state.chanceModes)&&state
 function startCalc(){
  if(calculating)return;
  const modes=selectedChanceModes();if(!modes.length){toast('Выбери хотя бы один тип генерации');return}
- const good=goodConstraints();if(good?.error){toast(good.error);return}const check={mins:Array(5).fill(0),maxs:Array(5).fill(1000)};const bad=badConstraints();if(bad?.error){toast(bad.error);return}state.badEnabled=!!bad;state.goodEnabled=true;
+ let good=goodConstraints();if(good?.error){toast(good.error);return}const check={mins:Array(5).fill(0),maxs:Array(5).fill(1000)};let bad=badConstraints();if(bad?.error){toast(bad.error);return}if(!good.length){if(!Array.isArray(bad)||!bad.length){toast('Включи хотя бы один заполненный блок');return}good=bad;bad=null;}state.goodEnabled=true;
  state.mins=check.mins;state.maxs=check.maxs;state.chanceModes=modes;state.chanceMode=modes[0];persist();
  calculating=true;$('progressTrack').hidden=true;$('chanceResult').innerHTML='';updateTimers();
  const results=[];let index=0;
@@ -312,9 +316,9 @@ function renderHistory(){
   const rs=entry.comparison?entry.results:[entry];const r=rs[0];if(!r)return;
   state.chanceModes=rs.map(x=>x.mode);state.chanceMode=r.mode;
   state.mins=[...r.mins];state.maxs=[...r.maxs];state.iterations=r.iterations||state.iterations;
-  if(Array.isArray(r.badBlocks)){state.badEnabled=true;state.badBlocks=r.badBlocks.map(b=>({name:b.name,ranges:b.mins.map((min,i)=>b.conditions.includes(i)?{min,max:b.maxs[i]}:null)}))}
+  if(Array.isArray(r.badBlocks)){state.badEnabled=true;state.badBlocks=r.badBlocks.map(b=>({name:b.name,enabled:b.enabled!==false,ranges:b.mins.map((min,i)=>b.conditions.includes(i)?{min,max:b.maxs[i]}:null)}))}
   else if(r.badNumerator!==undefined){state.badEnabled=true;state.badBlocks=[]}else{state.badEnabled=false;state.badBlocks=[]}
-  if(Array.isArray(r.goodBlocks)){state.goodBlocks=r.goodBlocks.map(b=>({name:b.name,ranges:b.mins.map((min,i)=>b.conditions.includes(i)?{min,max:b.maxs[i]}:null)}))}else state.goodBlocks=[];
+  if(Array.isArray(r.goodBlocks)){state.goodBlocks=r.goodBlocks.map(b=>({name:b.name,enabled:b.enabled!==false,ranges:b.mins.map((min,i)=>b.conditions.includes(i)?{min,max:b.maxs[i]}:null)}))}else state.goodBlocks=[];
   state.goodEnabled=true;ensureGoodBlock();persist();renderChanceModes();renderGoodRanges();renderBadRanges();switchTab('chance');toast('Условия восстановлены');
  });
 }
