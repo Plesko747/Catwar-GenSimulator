@@ -115,7 +115,13 @@ function validateBlockInputs(container){
   const invalid=values.map(v=>v!==null&&(!Number.isFinite(v)||v<0||v>100||Math.abs(v*10-Math.round(v*10))>1e-6));
   if(!invalid.some(Boolean)&&values[0]!==null&&values[1]!==null&&values[0]>values[1]){invalid[0]=true;invalid[1]=true;}
   inputs.forEach((input,i)=>{input.classList.toggle('range-invalid',invalid[i]);input.setAttribute('aria-invalid',String(invalid[i]));input.title=invalid[i]?'Введите значение от 0 до 100 с точностью до 0,1; «От» не должно превышать «До».':'';});
+  row.classList.toggle('range-row-invalid',invalid.some(Boolean));
   if(invalid.some(Boolean))hasErrors=true;
+ });
+ container.querySelectorAll('.good-block,.bad-block').forEach(block=>{
+  const invalid=!!block.querySelector('.range-invalid');
+  block.classList.toggle('block-input-invalid',invalid);
+  block.setAttribute('aria-invalid',String(invalid));
  });
  return !hasErrors;
 }

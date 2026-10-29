@@ -227,3 +227,19 @@ select{scroll-margin-bottom:180px}
 
 /* Invalid probability boundaries are highlighted as the user types. */
 #chance input.range-invalid,#chance input.range-invalid:focus{border:2px solid #e14b4b;background:rgba(220,55,55,.14);box-shadow:0 0 0 2px rgba(220,55,55,.12);outline-color:#e14b4b;}
+
+/* v10.18: compact rectangular condition editors, with errors shown in the editor. */
+#chance #goodBlocks,#chance #badBlocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;align-items:start;margin:12px 0 18px}
+#chance .good-block,#chance .bad-block{margin:0;min-width:0;border-radius:9px;padding:10px;box-shadow:none}
+#chance .good-block-head,#chance .bad-block-head{gap:7px;margin-bottom:8px;align-items:center}
+#chance .good-block-head label,#chance .bad-block-head label{min-width:0;flex:1 1 150px;font-size:12px}
+#chance .good-block-head input,#chance .bad-block-head input{max-width:none;padding:6px 8px}
+#chance .good-block .range-rows,#chance .bad-block .range-rows{gap:3px}
+#chance .good-block .range-row,#chance .bad-block .range-row{grid-template-columns:minmax(88px,1fr) minmax(0,78px) minmax(0,78px);gap:5px;padding:4px 6px;border-radius:5px}
+#chance .range-row span{font-size:12px;white-space:nowrap}
+#chance .range-row label small{font-size:10px}
+#chance .range-row input{min-height:29px;padding:4px 5px;font-size:13px}
+#chance .good-block .danger,#chance .bad-block .danger{padding:6px 8px;font-size:12px}
+#chance .good-block.block-input-invalid,#chance .bad-block.block-input-invalid{border:2px solid #e14b4b;background:rgba(220,55,55,.09)}
+#chance .range-row.range-row-invalid{border-color:#e14b4b;background:rgba(220,55,55,.08)}
+@media(max-width:600px){#chance #goodBlocks,#chance #badBlocks{grid-template-columns:minmax(0,1fr);gap:9px}#chance .good-block,#chance .bad-block{padding:8px}#chance .good-block .range-row,#chance .bad-block .range-row{grid-template-columns:minmax(80px,1fr) minmax(0,72px) minmax(0,72px);gap:4px;padding:4px}#chance .range-row span{font-size:12px}}
