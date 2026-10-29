@@ -262,3 +262,25 @@ select{scroll-margin-bottom:180px}
 #chance .good-block.block-disabled,#chance .bad-block.block-disabled{opacity:.56;border-style:dashed}
 #chance .block-disabled .range-rows{opacity:.72}
 @media(max-width:600px){#chance .block-toggle{order:0}#chance .good-block-head label:not(.block-toggle),#chance .bad-block-head label:not(.block-toggle){flex-basis:100%;order:2}}
+
+/* Visible per-block accounting controls; override generic header input rules. */
+#chance .good-block-head label.block-toggle,
+#chance .bad-block-head label.block-toggle {
+  display:inline-flex; align-items:center; justify-content:flex-start;
+  flex:0 0 auto; min-width:max-content; width:auto;
+  gap:8px; padding:7px 10px; border:1px solid var(--border,#60746c);
+  border-radius:8px; background:rgba(128,128,128,.09);
+  font-size:13px; line-height:1.2; cursor:pointer;
+}
+#chance .good-block-head label.block-toggle input[type="checkbox"],
+#chance .bad-block-head label.block-toggle input[type="checkbox"] {
+  appearance:auto; -webkit-appearance:checkbox;
+  display:inline-block; flex:0 0 18px; width:18px; min-width:18px;
+  max-width:18px; height:18px; padding:0; margin:0;
+  vertical-align:middle; accent-color:#38976d; opacity:1;
+}
+#chance .block-toggle:has(input:disabled){opacity:.7;cursor:not-allowed}
+@media(max-width:600px){
+  #chance .good-block-head label.block-toggle,
+  #chance .bad-block-head label.block-toggle{flex:0 0 auto;min-width:max-content;order:0}
+}
