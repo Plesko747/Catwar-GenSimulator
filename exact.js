@@ -5,3 +5,21 @@ function countValid(mode,mins,maxs){const lo=mins.slice(),hi=maxs.slice();if(mod
 let group=[],threshold=0;if(mode.startsWith('speed')){group=[3,4];threshold=mode==='speed70'?700:400}else if(mode.startsWith('defense')){group=[1,2];threshold=mode==='defense70'?700:400}
 if(!group.length)return polyCount([0,1,2,3,4],lo,hi)[1000];const rest=[0,1,2,3,4].filter(i=>!group.includes(i));const a=polyCount(group,lo,hi),b=polyCount(rest,lo,hi);let result=0n;for(let s=threshold;s<=1000;s++)result+=a[s]*b[1000-s];return result}
 function exactChance(mode,mins,maxs){const zeros=[0,0,0,0,0],full=[1000,1000,1000,1000,1000];const numerator=countValid(mode,mins,maxs),denominator=countValid(mode,zeros,full);return {numerator:numerator.toString(),denominator:denominator.toString()}}
+
+// Each block is a conjunction; blocks form a union. Count with inclusion-exclusion.
+function countBadBlocks(mode,blocks){
+ const counts=blocks.map(b=>countValid(mode,b.mins,b.maxs));
+ let union=0n;
+ function visit(pos,lo,hi,depth){
+  for(let i=pos;i<blocks.length;i++){
+   const nlo=lo.map((v,j)=>Math.max(v,blocks[i].mins[j]));
+   const nhi=hi.map((v,j)=>Math.min(v,blocks[i].maxs[j]));
+   if(nlo.some((v,j)=>v>nhi[j]))continue;
+   const count=countValid(mode,nlo,nhi);
+   union+=depth%2===0?count:-count;
+   visit(i+1,nlo,nhi,depth+1);
+  }
+ }
+ visit(0,Array(5).fill(0),Array(5).fill(1000),0);
+ return {badNumerator:union.toString(),badBlockNumerators:counts.map(String)};
+}
